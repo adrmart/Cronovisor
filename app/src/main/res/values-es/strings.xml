@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Cronovisor_v1</string>
+    <string name="action_settings">Configuración</string>
+    <string name="navigation_drawer_close"></string>
+    <string name="title_activity_image">Imagenes</string>
+    <string name="title_activity_maps"></string>
+    <string name="title_activity_street_gallery">Calles</string>
+</resources>

@@ -16,10 +16,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.EditText;
 import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -35,6 +34,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class StreetGalleryActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -50,10 +50,12 @@ public class StreetGalleryActivity extends AppCompatActivity implements Navigati
 
     private static final String URL_STREETS= "http://virtual.lab.inf.uva.es:20202/street/?format=json";
     private MenuItem searchItem;
+    private String idioma;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        idioma = Locale.getDefault().getDisplayLanguage();
         setContentView(R.layout.activity_street_gallery);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -104,21 +106,44 @@ public class StreetGalleryActivity extends AppCompatActivity implements Navigati
             public void onResponse(JSONArray response) {
 
                 // Obtener el marker del objeto
-                for(int i=0; i<response.length(); i++){
-                    try {
-                        JSONObject objeto= response.getJSONObject(i);
-                        Street street = new Street(objeto.getString("description"),
-                                objeto.getInt("id"),
-                                objeto.getString("name"),
-                                objeto.getString("represent"));
-                        mGridData.add(street);
-                    } catch (JSONException e) {
-                        Log.e(TAG, "Error de parsing: "+ e.getMessage());
+                if (idioma.equals("español")){
+                    for(int i=0; i<response.length(); i++){
+                        try {
+                            JSONObject objeto= response.getJSONObject(i);
+                            Street street = new Street(objeto.getString("description_es"),
+                                    objeto.getInt("id"),
+                                    objeto.getDouble("latitud"),
+                                    objeto.getDouble("longitud"),
+                                    objeto.getString("name_es"),
+                                    objeto.getString("represent"));
+                            mGridData.add(street);
+                        } catch (JSONException e) {
+                            Log.e(TAG, "Error de parsing: "+ e.getMessage());
+                        }
+                        if (i==response.length()-1){
+                            Log.d(TAG,"Ultimo elemento de la respuesta: " + i);
+                        }
                     }
-                    if (i==response.length()-1){
-                        Log.d(TAG,"Ultimo elemento de la respuesta: " + i);
+                } else {
+                    for(int i=0; i<response.length(); i++){
+                        try {
+                            JSONObject objeto= response.getJSONObject(i);
+                            Street street = new Street(objeto.getString("description_en"),
+                                    objeto.getInt("id"),
+                                    objeto.getDouble("latitud"),
+                                    objeto.getDouble("longitud"),
+                                    objeto.getString("name_en"),
+                                    objeto.getString("represent"));
+                            mGridData.add(street);
+                        } catch (JSONException e) {
+                            Log.e(TAG, "Error de parsing: "+ e.getMessage());
+                        }
+                        if (i==response.length()-1){
+                            Log.d(TAG,"Ultimo elemento de la respuesta: " + i);
+                        }
                     }
                 }
+
                 mGridAdapter.setGridData(mGridData);
                 mProgressBar.setVisibility(View.GONE);
             }
@@ -126,6 +151,8 @@ public class StreetGalleryActivity extends AppCompatActivity implements Navigati
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.d(TAG, "Error Respuesta en JSON: " + error.getMessage() +  " || " + error.getLocalizedMessage());
+                Toast.makeText(getBaseContext(), getText(R.string.server_fail), Toast.LENGTH_LONG).show();
+
             }
         });
         requestQueue.add(jsArrayRequest);
@@ -160,29 +187,11 @@ public class StreetGalleryActivity extends AppCompatActivity implements Navigati
         getMenuInflater().inflate(R.menu.menu, menu);
         searchItem = menu.findItem(R.id.action_search);
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        Log.d(TAG, "SearchItem: " + searchItem.toString());
         if (searchItem != null) {
             searchView = (SearchView) searchItem.getActionView();
         }
-        ImageView closeButton = (ImageView) searchView.findViewById(R.id.search_close_btn);
-        closeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mGridAdapter.clear();
-                mGridAdapter.setGridData(mGridData);
-                EditText et = (EditText) findViewById(R.id.search_src_text);
 
-                //Clear the text from EditText view
-                et.setText("");
-
-                //Clear query
-                searchView.setQuery("", false);
-                //Collapse the action view
-                searchView.onActionViewCollapsed();
-                //Collapse the search widget
-                searchItem.collapseActionView();
-                requestStreets();
-            }
-        });
         if (searchView != null) {
 
             searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
@@ -191,18 +200,18 @@ public class StreetGalleryActivity extends AppCompatActivity implements Navigati
                 @Override
                 public boolean onQueryTextChange(String newText) {
                     Log.i("onQueryTextChange", newText);
+                    mGridAdapter.getFilter().filter(newText);
                     return true;
                 }
                 @Override
                 public boolean onQueryTextSubmit(String query) {
                     Log.i("onQueryTextSubmit", query);
-                    mGridAdapter.search(query);
                     return true;
                 }
             };
             searchView.setOnQueryTextListener(queryTextListener);
         }
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

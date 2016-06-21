@@ -1,6 +1,7 @@
 package com.uva.adrmart.cronovisor_v1.activitys;
 
 import android.Manifest;
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -19,10 +20,13 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -51,6 +55,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 public class MapsActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener, LocationListener, GpsStatus.Listener  {
 
@@ -71,12 +76,19 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
     private List<MarkerPropio> listMarkers;
 
     private RequestQueue requestQueue;
+    private String idioma;
+    private MenuItem searchItem;
+    private SearchView searchView;
+    private SearchView.OnQueryTextListener queryTextListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        idioma = Locale.getDefault().getDisplayLanguage();
+        Log.d(TAG, idioma);
         //Inicio de la base de datos
         //BDHelper.init(this);
+
 
         int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(getApplicationContext());
         if(status == ConnectionResult.SUCCESS) {
@@ -159,23 +171,41 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
             public void onResponse(JSONArray response) {
                 Log.d(TAG, String.valueOf(response));
                 Log.d("RESQUEST", String.valueOf(Thread.currentThread()));
-
-                // Obtener el marker del objeto
-                for(int i=0; i<response.length(); i++){
-                    try {
-                        JSONObject objeto= response.getJSONObject(i);
-                        MarkerPropio marker = new MarkerPropio(objeto.getString("description"),
-                                objeto.getInt("id"),
-                                objeto.getDouble("latitud"),
-                                objeto.getDouble("longitud"),
-                                objeto.getString("title"),
-                                objeto.getInt("num_images"));
-                        listMarkers.add(marker);
-                    } catch (JSONException e) {
-                        Log.e(TAG, "Error de parsing: "+ e.getMessage());
+                if (idioma.equals("español")){
+                    for(int i=0; i<response.length(); i++){
+                        try {
+                            JSONObject objeto= response.getJSONObject(i);
+                            MarkerPropio marker = new MarkerPropio(objeto.getString("description_es"),
+                                    objeto.getInt("id"),
+                                    objeto.getDouble("latitud"),
+                                    objeto.getDouble("longitud"),
+                                    objeto.getString("title_es"),
+                                    objeto.getInt("num_images"));
+                            listMarkers.add(marker);
+                        } catch (JSONException e) {
+                            Log.e(TAG, "Error de parsing: "+ e.getMessage());
+                        }
+                        if (i==response.length()-1){
+                            Log.d(TAG,"Ultimo elemento de la respuesta: " + i);
+                        }
                     }
-                    if (i==response.length()-1){
-                        Log.d(TAG,"Ultimo elemento de la respuesta: " + i);
+                } else {
+                    for(int i=0; i<response.length(); i++){
+                        try {
+                            JSONObject objeto= response.getJSONObject(i);
+                            MarkerPropio marker = new MarkerPropio(objeto.getString("description_en"),
+                                    objeto.getInt("id"),
+                                    objeto.getDouble("latitud"),
+                                    objeto.getDouble("longitud"),
+                                    objeto.getString("title_en"),
+                                    objeto.getInt("num_images"));
+                            listMarkers.add(marker);
+                        } catch (JSONException e) {
+                            Log.e(TAG, "Error de parsing: "+ e.getMessage());
+                        }
+                        if (i==response.length()-1){
+                            Log.d(TAG,"Ultimo elemento de la respuesta: " + i);
+                        }
                     }
                 }
                 notifyMarkerEnded();
@@ -185,6 +215,7 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.d(TAG, "Error Respuesta en JSON: " + error.getMessage() +  " || " + error.getLocalizedMessage());
+                Toast.makeText(getBaseContext(), getText(R.string.server_fail), Toast.LENGTH_LONG).show();
             }
         });
         requestQueue.add(jsArrayRequest);
@@ -299,8 +330,42 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu, menu);
-        return true;
+        MenuInflater infrater = getMenuInflater();
+        infrater.inflate(R.menu.menu, menu);
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                Log.i("onQueryTextSubmit", query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                Log.i("onQueryTextCahnge", newText);
+                return true;
+            }
+        });
+        /*searchItem = menu.findItem(R.id.action_search);
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        Log.d(TAG, "SearchItem: " + searchItem.toString());
+        searchView = (SearchView) searchItem.getActionView();
+        Log.d(TAG, "SearchView: " + searchView.toString());
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                Log.i("onQueryTextChange", newText);
+                return true;
+            }
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                Log.i("onQueryTextSubmit", query);
+                return true;
+            }
+        });*/
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override

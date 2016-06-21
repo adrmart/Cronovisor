@@ -1,11 +1,18 @@
 <resources>
     <string name="app_name">Cronovisor_v1</string>
     <string name="title_activity_maps">Cronovisor</string>
-    <string name="title_activity_street_gallery">Calles</string>
-    <string name="title_activity_image">Imagenes</string>
+    <string name="title_activity_street_gallery">Streets</string>
+    <string name="title_activity_image">Images</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
+    <string name="idioma_español">español</string>
+    <string name="image_autor">Autor de la imagen</string>
+    <string name="image_año">Año aproximado</string>
+    <string name="local_service_started">Location not available</string>
+    <string name="local_service_stopped">stoped</string>
+    <string name="local_service_label">label</string>
+    <string name="server_fail">Server is ofline, try again later</string>
 </resources>

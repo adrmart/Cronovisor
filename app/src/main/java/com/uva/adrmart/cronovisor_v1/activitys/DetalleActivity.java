@@ -20,6 +20,8 @@ import com.uva.adrmart.cronovisor_v1.domain.Imagen;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Locale;
+
 import it.sephiroth.android.library.imagezoom.ImageViewTouch;
 
 /**
@@ -41,6 +43,7 @@ public class DetalleActivity extends AppCompatActivity {
     private RequestQueue requestQueue;
     private boolean isClicked;
     private ImageViewTouch imagenExpand;
+    private String idioma;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +56,7 @@ public class DetalleActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_IMMERSIVE);*/
+        idioma = Locale.getDefault().getDisplayLanguage();
         requestQueue= Volley.newRequestQueue(this);
         doubleLayout();
 
@@ -103,20 +107,38 @@ public class DetalleActivity extends AppCompatActivity {
             public void onResponse(JSONObject response) {
 
                 // Obtener el marker del objeto
+                if (idioma.equals("español")){
                     try {
-                         imagen = new Imagen(response.getString("autor"),
-                                 response.getInt("year"),
-                                 response.getString("id_street"),
-                                 response.getString("description"),
-                                 response.getInt("id"),
-                                 response.getString("image"),
-                                 response.getString("id_marker"),
-                                 response.getInt("orientation"),
-                                 response.getString("title"));
+                        imagen = new Imagen(response.getString("autor"),
+                                response.getInt("year"),
+                                response.getString("id_street"),
+                                response.getString("description_es"),
+                                response.getInt("id"),
+                                response.getString("image"),
+                                response.getString("id_marker"),
+                                response.getInt("orientation"),
+                                response.getString("title_es"));
                         cargarImagen();
                     } catch (JSONException e) {
                         Log.e(TAG, "Error de parsing: "+ e.getMessage() + "/// "+ e.getCause());
+                    }
+                } else{
+                    try {
+                        imagen = new Imagen(response.getString("autor"),
+                                response.getInt("year"),
+                                response.getString("id_street"),
+                                response.getString("description_en"),
+                                response.getInt("id"),
+                                response.getString("image"),
+                                response.getString("id_marker"),
+                                response.getInt("orientation"),
+                                response.getString("title_en"));
+                        cargarImagen();
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error de parsing: "+ e.getMessage() + "/// "+ e.getCause());
+                    }
                 }
+
             }
         }, new Response.ErrorListener() {
             @Override
@@ -131,7 +153,9 @@ public class DetalleActivity extends AppCompatActivity {
         Glide.with(imagenDetalle.getContext())
                     .load(imagen.getUrl())
                     .into(imagenDetalle);
-        texto.setText(imagen.getTitulo() + " " + imagen.getDescripcion()+ " " + imagen.getAutor() + " " + imagen.getAño());
+        texto.setText(imagen.getTitulo() + "\r\n" +
+                getString(R.string.image_autor) + ": " + imagen.getAutor() + "\r\n" + getString(R.string.image_año) + ": " + imagen.getAño() + "\r\n"+
+                imagen.getDescripcion());
     }
     private void cargaImagenExtendida(){
         Glide.with(imagenExpand.getContext())

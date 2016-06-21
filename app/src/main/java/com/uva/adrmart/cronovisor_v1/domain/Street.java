@@ -11,20 +11,31 @@ public class Street implements Serializable {
     private String nombre;
     private String descripcion;
     private String representativo;
-    private int numImages;
+    private double lat;
+    private double lon;
 
     public Street() {
     }
 
-    public Street(String descripcion, int id, String nombre, String representativo) {
+    public Street(String descripcion, int id, double lat, double lon, String nombre, String representativo) {
         this.descripcion = descripcion;
         this.id = id;
+        this.lat = lat;
+        this.lon = lon;
         this.nombre = nombre;
         this.representativo = representativo;
     }
 
     public String getNombre() {
         return nombre;
+    }
+
+    public double getLat() {
+        return lat;
+    }
+
+    public double getLon() {
+        return lon;
     }
 
     public int getId() {

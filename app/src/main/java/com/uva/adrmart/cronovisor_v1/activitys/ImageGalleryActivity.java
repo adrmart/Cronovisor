@@ -27,6 +27,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 /**
  * Created by Adrian on 02/06/2016.
@@ -48,10 +49,12 @@ public class ImageGalleryActivity extends AppCompatActivity {
     public static final String URL_FROM_MARKER= "http://virtual.lab.inf.uva.es:20202/imagesmarker/";
 
     public static final String URL_FORMAT = "/?format=json";
+    private String idioma;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        idioma = Locale.getDefault().getDisplayLanguage();
         setContentView(R.layout.activity_gallery_images);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
@@ -143,26 +146,50 @@ public class ImageGalleryActivity extends AppCompatActivity {
                     Log.d("RESQUEST", String.valueOf(Thread.currentThread()));
 
                     // Obtener la imagen del objeto
-                    for(int i=0; i<response.length(); i++){
-                        try {
-                            JSONObject objeto= response.getJSONObject(i);
-                            Imagen imagen = new Imagen(objeto.getString("autor"),
-                                    objeto.getInt("year"),
-                                    objeto.getString("id_street"),
-                                    objeto.getString("description"),
-                                    objeto.getInt("id"),
-                                    objeto.getString("image"),
-                                    objeto.getString("id_marker"),
-                                    objeto.getInt("orientation"),
-                                    objeto.getString("title"));
-                            mGridData.add(imagen);
-                        } catch (JSONException e) {
-                            Log.e(TAG, "Error de parsing: "+ e.getMessage());
+                    if (idioma.equals("español")){
+                        for(int i=0; i<response.length(); i++){
+                            try {
+                                JSONObject objeto= response.getJSONObject(i);
+                                Imagen imagen = new Imagen(objeto.getString("autor"),
+                                        objeto.getInt("year"),
+                                        objeto.getString("id_street"),
+                                        objeto.getString("description_es"),
+                                        objeto.getInt("id"),
+                                        objeto.getString("image"),
+                                        objeto.getString("id_marker"),
+                                        objeto.getInt("orientation"),
+                                        objeto.getString("title_es"));
+                                mGridData.add(imagen);
+                            } catch (JSONException e) {
+                                Log.e(TAG, "Error de parsing: "+ e.getMessage());
+                            }
+                            if (i==response.length()-1){
+                                Log.d(TAG,"Ultimo elemento de la respuesta: " + i);
+                            }
                         }
-                        if (i==response.length()-1){
-                            Log.d(TAG,"Ultimo elemento de la respuesta: " + i);
+                    } else {
+                        for(int i=0; i<response.length(); i++){
+                            try {
+                                JSONObject objeto= response.getJSONObject(i);
+                                Imagen imagen = new Imagen(objeto.getString("autor"),
+                                        objeto.getInt("year"),
+                                        objeto.getString("id_street"),
+                                        objeto.getString("description_en"),
+                                        objeto.getInt("id"),
+                                        objeto.getString("image"),
+                                        objeto.getString("id_marker"),
+                                        objeto.getInt("orientation"),
+                                        objeto.getString("title_en"));
+                                mGridData.add(imagen);
+                            } catch (JSONException e) {
+                                Log.e(TAG, "Error de parsing: "+ e.getMessage());
+                            }
+                            if (i==response.length()-1){
+                                Log.d(TAG,"Ultimo elemento de la respuesta: " + i);
+                            }
                         }
                     }
+
                     mGridAdapter.setGridData(mGridData);
                     mProgressBar.setVisibility(View.GONE);
                 }
