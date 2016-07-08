@@ -7,4 +7,5 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="espacio_grid">2dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+    <dimen name="column_dimen">120sp</dimen>
 </resources>

@@ -36,9 +36,9 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Locale;
 
-public class StreetGalleryActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class GalleryStreetActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-    private static final String TAG = StreetGalleryActivity.class.getName();
+    private static final String TAG = GalleryStreetActivity.class.getName();
     private SearchView searchView;
     private SearchView.OnQueryTextListener queryTextListener;
 
@@ -75,7 +75,7 @@ public class StreetGalleryActivity extends AppCompatActivity implements Navigati
 
         //Initialize with empty data
         mGridData = new ArrayList<>();
-        mGridAdapter = new GridViewStreetAdapter(this, R.layout.grid_item, mGridData);
+        mGridAdapter = new GridViewStreetAdapter(this, mGridData);
         mGridView.setAdapter(mGridAdapter);
 
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -85,7 +85,7 @@ public class StreetGalleryActivity extends AppCompatActivity implements Navigati
                 Street item = (Street) parent.getItemAtPosition(position);
 
                 //Pass the image title and url to DetailsActivity
-                Intent intent = new Intent(StreetGalleryActivity.this, ImageGalleryActivity.class);
+                Intent intent = new Intent(GalleryStreetActivity.this, ImageGalleryActivity.class);
                 intent.putExtra(ImageGalleryActivity.EXTRA_PARAM_ID, item.getId());
                 intent.putExtra(ImageGalleryActivity.EXTRA_PARAM, 2);
 
@@ -119,10 +119,9 @@ public class StreetGalleryActivity extends AppCompatActivity implements Navigati
                             mGridData.add(street);
                         } catch (JSONException e) {
                             Log.e(TAG, "Error de parsing: "+ e.getMessage());
+                            Toast.makeText(getBaseContext(), getText(R.string.internal_fail), Toast.LENGTH_LONG).show();
                         }
-                        if (i==response.length()-1){
-                            Log.d(TAG,"Ultimo elemento de la respuesta: " + i);
-                        }
+
                     }
                 } else {
                     for(int i=0; i<response.length(); i++){
@@ -137,9 +136,8 @@ public class StreetGalleryActivity extends AppCompatActivity implements Navigati
                             mGridData.add(street);
                         } catch (JSONException e) {
                             Log.e(TAG, "Error de parsing: "+ e.getMessage());
-                        }
-                        if (i==response.length()-1){
-                            Log.d(TAG,"Ultimo elemento de la respuesta: " + i);
+                            Toast.makeText(getBaseContext(), getText(R.string.internal_fail), Toast.LENGTH_LONG).show();
+
                         }
                     }
                 }
