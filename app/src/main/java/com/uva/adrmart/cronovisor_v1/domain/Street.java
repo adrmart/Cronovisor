@@ -11,31 +11,32 @@ public class Street implements Serializable {
     private String nombre;
     private String descripcion;
     private String representativo;
-    private double lat;
-    private double lon;
+
+    /*private Bitmap image;*/
 
     public Street() {
     }
 
-    public Street(String descripcion, int id, double lat, double lon, String nombre, String representativo) {
+    public Street(String descripcion, int id, String nombre, String representativo) {
         this.descripcion = descripcion;
         this.id = id;
-        this.lat = lat;
-        this.lon = lon;
         this.nombre = nombre;
         this.representativo = representativo;
     }
 
+ /*   public Street(String descripcion, int id, String nombre, Bitmap image) {
+        this.descripcion = descripcion;
+        this.id = id;
+        this.nombre = nombre;
+        this.image = image;
+    }*/
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
     public String getNombre() {
         return nombre;
-    }
-
-    public double getLat() {
-        return lat;
-    }
-
-    public double getLon() {
-        return lon;
     }
 
     public int getId() {
@@ -45,4 +46,12 @@ public class Street implements Serializable {
     public String getRepresentativo() {
         return representativo;
     }
+
+  /*  public Bitmap getImage() {
+        return image;
+    }
+
+    public void setImage(Bitmap image) {
+        this.image = image;
+    }*/
 }

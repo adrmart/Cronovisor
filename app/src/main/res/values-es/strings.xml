@@ -1,9 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Cronovisor_v1</string>
     <string name="action_settings">Configuración</string>
-    <string name="navigation_drawer_close"></string>
-    <string name="title_activity_image">Imagenes</string>
-    <string name="title_activity_maps"></string>
+    <string name="title_activity_image">Imágenes</string>
+    <string name="title_activity_maps">Cronovisor</string>
     <string name="title_activity_street_gallery">Calles</string>
+    <string name="descargas">Descargas</string>
+    <string name="gallery">Galería</string>
+    <string name="image_autor">Autor de la imagen</string>
+    <string name="image_año">Año aproximado</string>
+    <string name="imagen_ampliable">Imagen ampliable</string>
+    <string name="imagen_de_la_aplicacion">Imagen de la aplicacion</string>
+    <string name="imagen_del_grid">Imagen del grid</string>
+    <string name="internal_fail">Ha ocurrido un problema interno, intentelo de nuevo mas tarde</string>
+    <string name="map">Mapa</string>
+    <string name="route">Rutas</string>
+    <string name="search">Buscar</string>
+    <string name="server_fail">Servidor inactivo, intentelo mas tarde</string>
+    <string name="share">Compartir</string>
+    <string name="show_explanation">Cronovisor necesita acceder a su geolocalización para una mejor experiencia de usuario</string>
+    <string name="notification_button_images">Ver imágenes</string>
+    <string name="notification_button_map">Ver mapa</string>
+    <string name="show_download_explanation">¿Desea descargar los datos a su dispositivo?</string>
+    <string name="switch_grid">Vista en cuadricula</string>
+    <string name="switch_linear">Vista en linea</string>
+    <string name="download_complete">Descarga completada</string>
+    <string name="view_on_map">Ver en el mapa</string>
+    <string name="archivo_municipal_de_valladolid">Imágenes provenientes de Archivo municipal de valladolid</string>
 </resources>

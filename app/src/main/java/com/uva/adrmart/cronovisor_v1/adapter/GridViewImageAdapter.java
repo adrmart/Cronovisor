@@ -13,24 +13,24 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.uva.adrmart.cronovisor_v1.R;
-import com.uva.adrmart.cronovisor_v1.domain.Imagen;
+import com.uva.adrmart.cronovisor_v1.domain.Image;
 
 import java.util.ArrayList;
 
 /**
  * Created by Adrian on 02/06/2016.
  */
-public class GridViewImageAdapter extends ArrayAdapter<Imagen> {
+public class GridViewImageAdapter extends ArrayAdapter<Image> {
 
     private static final String TAG = GridViewStreetAdapter.class.getName();
 
-    private Context mContext;
-    private int layoutResourceId;
-    private ArrayList<Imagen> mGridData = new ArrayList<Imagen>();
+    private final Context mContext;
+    private final int layoutResourceId;
+    private ArrayList<Image> mGridData = new ArrayList<>();
 
-    public GridViewImageAdapter(Context mContext, int layoutResourceId, ArrayList<Imagen> mGridData) {
-        super(mContext, layoutResourceId, mGridData);
-        this.layoutResourceId = layoutResourceId;
+    public GridViewImageAdapter(Context mContext, ArrayList<Image> mGridData) {
+        super(mContext, R.layout.grid_item, mGridData);
+        this.layoutResourceId = R.layout.grid_item;
         this.mContext = mContext;
         this.mGridData = mGridData;
     }
@@ -38,7 +38,7 @@ public class GridViewImageAdapter extends ArrayAdapter<Imagen> {
      * Updates grid data and refresh grid items.
      * @param mGridData
      */
-    public void setGridData(ArrayList<Imagen> mGridData) {
+    public void setGridData(ArrayList<Image> mGridData) {
         this.mGridData = mGridData;
         Log.d(TAG, "setGridData");
         notifyDataSetChanged();
@@ -60,9 +60,13 @@ public class GridViewImageAdapter extends ArrayAdapter<Imagen> {
             holder = (ViewHolder) row.getTag();
         }
 
-        Imagen item = mGridData.get(position);
+        Image item = mGridData.get(position);
         holder.titleTextView.setText(Html.fromHtml(item.getTitulo()));
         Glide.with(mContext).load(item.getUrl()).into(holder.imageView);
+
+        if (item.getUrl()!=null){
+            Glide.with(mContext).load(item.getUrl()).into(holder.imageView);
+        }
         return row;
     }
 

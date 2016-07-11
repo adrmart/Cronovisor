@@ -4,25 +4,25 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_map"
-            android:icon="@drawable/ic_menu_map"
-            android:title="Map" />
+            android:icon="@drawable/ic_map_black_18dp"
+            android:title="@string/map" />
         <item
             android:id="@+id/nav_gallery"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="Gallery" />
-        <item
+            android:icon="@drawable/ic_collections_black_18dp"
+            android:title="@string/gallery" />
+       <!-- <item
             android:id="@+id/nav_route"
             android:icon="@drawable/ic_menu_manage"
-            android:title="Route" />
+            android:title="@string/route" />-->
     </group>
 
-    <item android:title="Descargas">
+   <!-- <item android:title="@string/descargas">
         <menu>
             <item
                 android:id="@+id/nav_download"
                 android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
+                android:title="@string/share" />
         </menu>
-    </item>
+    </item>-->
 
 </menu>

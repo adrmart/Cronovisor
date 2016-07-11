@@ -26,22 +26,22 @@ public class GridViewStreetAdapter extends BaseAdapter implements Filterable{
 
     private static final String TAG = GridViewStreetAdapter.class.getName();
 
-    private Context mContext;
-    private int layoutResourceId;
-    private ArrayList<Street> mGridData = new ArrayList<Street>();
-    private ArrayList<Street> mGridDataSearch = new ArrayList<Street>();
+    private final Context mContext;
+    private final int layoutResourceId;
+    private ArrayList<Street> mGridData = new ArrayList<>();
+    private ArrayList<Street> mGridDataSearch = new ArrayList<>();
 
-    CustomFilter filter;
+    private CustomFilter filter;
 
-    public GridViewStreetAdapter(Context mContext, int layoutResourceId, ArrayList<Street> mGridData) {
-        this.layoutResourceId = layoutResourceId;
+    public GridViewStreetAdapter(Context mContext, ArrayList<Street> mGridData) {
+        this.layoutResourceId = R.layout.grid_item;
         this.mContext = mContext;
         this.mGridData = mGridData;
         this.mGridDataSearch = mGridData;
     }
     /**
      * Updates grid data and refresh grid items.
-     * @param mGridData
+     * @param mGridData array of data
      */
     public void setGridData(ArrayList<Street> mGridData) {
         this.mGridData = mGridData;
@@ -83,55 +83,15 @@ public class GridViewStreetAdapter extends BaseAdapter implements Filterable{
         holder.titleTextView.setText(Html.fromHtml(item.getNombre()));
         if (item.getRepresentativo()!="null"){
             Glide.with(mContext).load(item.getRepresentativo()).into(holder.imageView);
-        } else{
-            Glide.with(mContext).load(R.drawable.colon).into(holder.imageView);
         }
 
         return row;
-/*
-        LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-*/
-       /* LayoutInflater inflater = ((Activity) mContext).getLayoutInflater();
-
-        if (convertView==null){
-            convertView=inflater.inflate(layoutResourceId, null);
-        }
-        TextView text = (TextView) convertView.findViewById(R.id.name);
-        ImageView imageView = (ImageView) convertView.findViewById(R.id.image);
-        Street item = mGridData.get(position);
-        text.setText(Html.fromHtml(item.getNombre()));
-        if (item.getRepresentativo()!="null"){
-            Glide.with(mContext).load(item.getRepresentativo()).into(imageView);
-        } else{
-            Glide.with(mContext).load(R.drawable.colon).into(imageView);
-        }
-        return convertView;*/
     }
 
     static class ViewHolder {
         TextView titleTextView;
         ImageView imageView;
     }
-   /* public void search(String text){
-       *//* mGridDataSearch.clear();
-        Collator collator = Collator.getInstance();
-        collator.setStrength(Collator.PRIMARY);*//*
-        Toast.makeText(getContext(),"Texto de busqueda: " + text, Toast.LENGTH_LONG );
-        if(TextUtils.isEmpty(text)){
-
-        }
-        *//*for (int i =0; i<mGridData.size();i++){
-            Log.d(TAG, mGridData.get(i).getNombre().compareToIgnoreCase(text) + " ");
-            if (mGridData.get(i).getNombre().compareToIgnoreCase(text)!=-1){
-                mGridDataSearch.add(mGridData.get(i));
-            }
-        }
-        this.clear();
-        for (int i =0; i<mGridDataSearch.size();i++){
-            add(mGridDataSearch.get(i));
-        }
-*//*
-    }*/
 
     @Override
     public Filter getFilter() {
@@ -141,7 +101,7 @@ public class GridViewStreetAdapter extends BaseAdapter implements Filterable{
         return filter;
     }
 
-    class CustomFilter extends Filter{
+    private class CustomFilter extends Filter{
 
         @Override
         protected FilterResults performFiltering(CharSequence constraint) {
@@ -149,7 +109,7 @@ public class GridViewStreetAdapter extends BaseAdapter implements Filterable{
 
             if (constraint!=null && constraint.length()>0){
                 constraint = constraint.toString().toUpperCase();
-                ArrayList<Street> filters = new ArrayList<Street>();
+                ArrayList<Street> filters = new ArrayList<>();
                 for (int i=0;i<mGridDataSearch.size();i++){
                     if(mGridDataSearch.get(i).getNombre().toUpperCase().contains(constraint)){
                         filters.add(mGridDataSearch.get(i));

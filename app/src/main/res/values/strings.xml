@@ -1,18 +1,37 @@
 <resources>
-    <string name="app_name">Cronovisor_v1</string>
+    <string name="app_name" translatable="false">Cronovisor_v1</string>
     <string name="title_activity_maps">Cronovisor</string>
     <string name="title_activity_street_gallery">Streets</string>
     <string name="title_activity_image">Images</string>
 
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="navigation_drawer_open" translatable="false">Open navigation drawer</string>
+    <string name="navigation_drawer_close" translatable="false">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
-    <string name="idioma_español">español</string>
-    <string name="image_autor">Autor de la imagen</string>
-    <string name="image_año">Año aproximado</string>
-    <string name="local_service_started">Location not available</string>
-    <string name="local_service_stopped">stoped</string>
-    <string name="local_service_label">label</string>
+    <string name="idioma_español" translatable="false">español</string>
+    <string name="local_service_started" translatable="false">Location not available</string>
+    <string name="local_service_stopped" translatable="false">stoped</string>
+    <string name="local_service_label" translatable="false">label</string>
     <string name="server_fail">Server is ofline, try again later</string>
+    <string name="search">Search</string>
+    <string name="map">Map</string>
+    <string name="gallery">Gallery</string>
+    <string name="route">Route</string>
+    <string name="share">Share</string>
+    <string name="descargas">Downloads</string>
+    <string name="image_autor">Author image</string>
+    <string name="image_año">Approximate year</string>
+    <string name="imagen_ampliable">Expandable image</string>
+    <string name="imagen_de_la_aplicacion">Image of the application</string>
+    <string name="imagen_del_grid">Grid image</string>
+    <string name="internal_fail">An internal problem has occurred, try again later</string>
+    <string name="show_explanation">Cronovisor needs to access to your location in order to improve user experiencie</string>
+    <string name="notification_button_map">View map</string>
+    <string name="notification_button_images">View images</string>
+    <string name="switch_grid">Grid view</string>
+    <string name="switch_linear">Linear view</string>
+    <string name="show_download_explanation">Do you want to download application data to your mobile?</string>
+    <string name="download_complete">Download complete</string>
+    <string name="view_on_map">View on map</string>
+    <string name="archivo_municipal_de_valladolid">Imagen from Archivo municipal de valladolid</string>
 </resources>

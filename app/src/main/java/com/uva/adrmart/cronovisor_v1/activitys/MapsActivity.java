@@ -1,17 +1,18 @@
 package com.uva.adrmart.cronovisor_v1.activitys;
 
 import android.Manifest;
-import android.app.SearchManager;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -20,11 +21,9 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -57,38 +56,44 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
-public class MapsActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener, LocationListener, GpsStatus.Listener  {
+/**
+ * Class that models maps and markers
+ */
+
+public class MapsActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener, LocationListener {
 
     private static final String TAG = MapsActivity.class.getName();
     private static final String URL_MARKERS = "http://virtual.lab.inf.uva.es:20202/marker/?format=json";
+    public static final String EXTRA_PARAM_LAT = "com.uva.adrmart.tfg.lat";
+    public static final String EXTRA_PARAM_LON = "com.uva.adrmart.tfg.lon";
+    final private int REQUEST_CODE_ASK_PERMISSIONS = 1;
 
     private GoogleMap mMap;
 
     private static final int TWO_MINUTES = 1000 * 60 * 2;
 
-    // Variables de localizacion
     private LocationManager locationManager;
-    private Location bestLocation; //Mejor localizacion del dispositivo
-    private double lat; //Latitud del usuario
-    private double lon; //Longitud del usuario
+    private Location bestLocation; //Best location
 
     private HashMap<LatLng, Integer> hashMarker;
     private List<MarkerPropio> listMarkers;
 
     private RequestQueue requestQueue;
     private String idioma;
-    private MenuItem searchItem;
-    private SearchView searchView;
-    private SearchView.OnQueryTextListener queryTextListener;
+
+/*
+    private MarkerDao markerDao;
+*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         idioma = Locale.getDefault().getDisplayLanguage();
-        Log.d(TAG, idioma);
-        //Inicio de la base de datos
-        //BDHelper.init(this);
 
+/*
+        markerDao = new MarkerDaoImpl();
+*/
+        Log.d(TAG, idioma);
 
         int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(getApplicationContext());
         if(status == ConnectionResult.SUCCESS) {
@@ -114,13 +119,11 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
             SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                     .findFragmentById(R.id.map);
             mapFragment.getMapAsync(this);
-            //Inicio del mapa
-
         }else{
             GooglePlayServicesUtil.getErrorDialog(status, this, status);
         }
-
     }
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -135,42 +138,153 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
         Log.d(TAG, "startMap");
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         mMap = googleMap;
+        requestLocationPermision();
+        requestMarkers();
+        Log.d(TAG, "Map listo");
+    }
 
-        //Comprobacion de permisos
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            String provider = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
-            if (!provider.contains("gps")) {
-                AlertNoGps();
+    /**
+     * Check if we have permision to access location
+     */
+    public void requestLocationPermision(){
+
+        // Forma de actuar diferente si la versión del dispositivo en Marshmallow
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            Log.d(TAG, "Versión 23");
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                //Si no tenemos permiso, lo pedimos
+
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    // Show an expanation to the user *asynchronously* -- don't block
+                    // this thread waiting for the user's response! After the user
+                    // sees the explanation, try again to request the permission.
+                    Log.d(TAG, "Show an expanation");
+                    new AlertDialog.Builder(this)
+                            .setMessage(getString(R.string.show_explanation))
+                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                        requestPermissions(new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
+                                                REQUEST_CODE_ASK_PERMISSIONS);
+                                    }
+                                }
+                            })
+                            .create()
+                            .show();
+
+                } else{
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_ASK_PERMISSIONS);
+                }
+            } else{
+                Log.d(TAG, "Tenemos permiso");
+
+                String provider = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+                if (!provider.contains("gps")) {
+                    //Si el GPS no esta activo, pedimos su iniciación
+                    AlertNoGps();
+                }
+
+                //Inicializacion de los providers
+                for (String s : locationManager.getAllProviders()) {
+                    int minDistance = 2;
+                    int checkInterval = 2;
+                    locationManager.requestLocationUpdates(s, checkInterval,
+                            minDistance, this);
+                    Location actualLocation = locationManager.getLastKnownLocation(s);
+                    //Comprobamos si es una mejor localización
+                    if (actualLocation!=null){
+                        if (isBetterLocation(actualLocation)){
+                            Log.d(TAG, "Mejor localización -> " + s + " - "+ actualLocation);
+                            bestLocation = actualLocation;
+                        }
+                    }
+                }
+
+                mMap.setMyLocationEnabled(true);
+                setLocation();
             }
-            Location location = null;
-            //Inicializacion de los providers
-            for (String s : locationManager.getAllProviders()) {
-                int minDistance = 2;
-                int checkInterval = 2;
-                locationManager.requestLocationUpdates(s, checkInterval,
-                        minDistance, this);
-                location = locationManager.getLastKnownLocation(s);
+        } else{
+            //Comprobacion de permisos
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Tenemos permiso");
+
+                String provider = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+
+                if (!provider.contains("gps")) {
+                    //Si el GPS no esta activo, pedimos su iniciación
+                    AlertNoGps();
+                }
+
+                //Inicializacion de los providers
+                for (String s : locationManager.getAllProviders()) {
+                    int minDistance = 2;
+                    int checkInterval = 2;
+                    locationManager.requestLocationUpdates(s, checkInterval,
+                            minDistance, this);
+                    Location actualLocation = locationManager.getLastKnownLocation(s);
+                    if (actualLocation!=null){
+                        if (isBetterLocation(actualLocation)){
+                            Log.d(TAG, "Mejor localización -> " + s + " - "+ actualLocation);
+                            bestLocation = actualLocation;
+                        }
+                    }
+                }
+
+                mMap.setMyLocationEnabled(true);
+                setLocation();
             }
-            mMap.setMyLocationEnabled(true);
-            if (location!=null){
-                Log.d(TAG, "Posicion actual -> LAT: "+ location.getLatitude() + " LON: " + location.getLongitude());
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 16));
+        }
+
+    }
+
+    /**
+     * Set the camera center
+     */
+    public void setLocation(){
+        //Check if user come from notification
+        if (getIntent().hasExtra(EXTRA_PARAM_LAT) && getIntent().hasExtra(EXTRA_PARAM_LON)){
+            Log.d(TAG, "Proviene del servicio, lat: " + getIntent().getExtras().getDouble(EXTRA_PARAM_LAT) + " - lon: " + getIntent().getExtras().getDouble(EXTRA_PARAM_LON));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(getIntent().getExtras().getDouble(EXTRA_PARAM_LAT), getIntent().getExtras().getDouble(EXTRA_PARAM_LON)), 18));
+            NotificationManager mNM = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            mNM.cancel(1);
+        } else{
+            if (bestLocation!=null){
+                Log.d(TAG, "Posicion actual -> LAT: "+ bestLocation.getLatitude() + " LON: " + bestLocation.getLongitude());
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(bestLocation.getLatitude(), bestLocation.getLongitude()), 16));
             } else{
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(41.651981, -4.728561), 16));
             }
-
-        } else {
-            // Show rationale and request permission.
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case 1: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0  && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    onMapReady(mMap);
+
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(41.651981, -4.728561), 16));
+                }
+            }
+        }
+    }
+
+    /**
+     * Request markers to the server
+     */
+    private void requestMarkers(){
         requestQueue= Volley.newRequestQueue(this);
         listMarkers = new ArrayList<>();
         JsonArrayRequest jsArrayRequest = new JsonArrayRequest(URL_MARKERS, new Listener<JSONArray>() {
 
             @Override
             public void onResponse(JSONArray response) {
-                Log.d(TAG, String.valueOf(response));
-                Log.d("RESQUEST", String.valueOf(Thread.currentThread()));
                 if (idioma.equals("español")){
                     for(int i=0; i<response.length(); i++){
                         try {
@@ -184,9 +298,8 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
                             listMarkers.add(marker);
                         } catch (JSONException e) {
                             Log.e(TAG, "Error de parsing: "+ e.getMessage());
-                        }
-                        if (i==response.length()-1){
-                            Log.d(TAG,"Ultimo elemento de la respuesta: " + i);
+                            Toast.makeText(getBaseContext(), getText(R.string.internal_fail), Toast.LENGTH_LONG).show();
+
                         }
                     }
                 } else {
@@ -202,30 +315,27 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
                             listMarkers.add(marker);
                         } catch (JSONException e) {
                             Log.e(TAG, "Error de parsing: "+ e.getMessage());
-                        }
-                        if (i==response.length()-1){
-                            Log.d(TAG,"Ultimo elemento de la respuesta: " + i);
+                            Toast.makeText(getBaseContext(), getText(R.string.internal_fail), Toast.LENGTH_LONG).show();
                         }
                     }
                 }
-                notifyMarkerEnded();
+                addMarkers();
 
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.d(TAG, "Error Respuesta en JSON: " + error.getMessage() +  " || " + error.getLocalizedMessage());
+                /*if (markerDao.findMarkers()!=null){
+                    listMarkers = markerDao.findMarkers();
+                    addMarkers();
+                } else {
+                    Toast.makeText(getBaseContext(), getText(R.string.server_fail), Toast.LENGTH_LONG).show();
+                }*/
                 Toast.makeText(getBaseContext(), getText(R.string.server_fail), Toast.LENGTH_LONG).show();
             }
         });
         requestQueue.add(jsArrayRequest);
-
-        Log.d(TAG, "Map listo");
-
-    }
-
-    private void notifyMarkerEnded() {
-        addMarkers();
     }
 
     @Override
@@ -247,24 +357,66 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onLocationChanged(Location location) {
         Log.d(TAG, "Nueva localización: " + location);
-        lat = location.getLatitude();
-        lon = location.getLongitude();
-        actualizaMejorLocaliz(location);
-    }
-
-    private void actualizaMejorLocaliz(Location localiz) {
-        if (localiz != null && (bestLocation == null
-                || localiz.getAccuracy() < 2 * bestLocation.getAccuracy()
-                || localiz.getTime() - bestLocation.getTime() > TWO_MINUTES)) {
-            Log.d(TAG, "Nueva mejor localización");
-            bestLocation = localiz;
-            lat = localiz.getLatitude();
-            lon = localiz.getLongitude();
+        if (isBetterLocation(location)){
+            Log.d(TAG, "Si es mejor localizacion");
+            bestLocation=location;
+        } else{
+            Log.d(TAG, "No es mejor localizacion");
         }
     }
 
+    protected boolean isBetterLocation(Location location) {
+        if (bestLocation == null) {
+            // A new location is always better than no location
+            return true;
+        }
+
+        // Check whether the new location fix is newer or older
+        long timeDelta = location.getTime() - bestLocation.getTime();
+        boolean isSignificantlyNewer = timeDelta > TWO_MINUTES;
+        boolean isSignificantlyOlder = timeDelta < -TWO_MINUTES;
+        boolean isNewer = timeDelta > 0;
+
+        // If it's been more than two minutes since the current location, use the new location
+        // because the user has likely moved
+        if (isSignificantlyNewer) {
+            return true;
+            // If the new location is more than two minutes older, it must be worse
+        } else if (isSignificantlyOlder) {
+            return false;
+        }
+
+        // Check whether the new location fix is more or less accurate
+        int accuracyDelta = (int) (location.getAccuracy() - bestLocation.getAccuracy());
+        boolean isLessAccurate = accuracyDelta > 0;
+        boolean isMoreAccurate = accuracyDelta < 0;
+        boolean isSignificantlyLessAccurate = accuracyDelta > 200;
+
+        // Check if the old and new location are from the same provider
+        boolean isFromSameProvider = isSameProvider(location.getProvider(),
+                bestLocation.getProvider());
+
+        // Determine location quality using a combination of timeliness and accuracy
+        if (isMoreAccurate) {
+            return true;
+        } else if (isNewer && !isLessAccurate) {
+            return true;
+        } else if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider) {
+            return true;
+        }
+        return false;
+    }
+
+    /** Checks whether two providers are the same */
+    private boolean isSameProvider(String provider1, String provider2) {
+        if (provider1 == null) {
+            return provider2 == null;
+        }
+        return provider1.equals(provider2);
+    }
+
     /**
-     * Método que solicita al usuario que active la localizacion GPS
+     * Suggest user to enable GPS
      */
     private void AlertNoGps() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -285,9 +437,8 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
     }
 
     /**
-     * Método que agrega los marcadores de la base de datos al mapa
+     * Add markers to map
      */
-
     private void addMarkers() {
 
         for (MarkerPropio m :  listMarkers) {
@@ -319,52 +470,56 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
 
             }
             mMap.addMarker(marker);
-            Log.d(TAG, posicion +" + " +m.getId());
             hashMarker.put(posicion, m.getId());
             mMap.setOnInfoWindowClickListener(this);
         }
     }
 
-
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        MenuInflater infrater = getMenuInflater();
-        infrater.inflate(R.menu.menu, menu);
-        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                Log.i("onQueryTextSubmit", query);
-                return true;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                Log.i("onQueryTextCahnge", newText);
-                return true;
-            }
-        });
-        /*searchItem = menu.findItem(R.id.action_search);
+        // Inflate the menu_gallery; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_map, menu);
+        /*MenuItem searchItem = menu.findItem(R.id.action_search);
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         Log.d(TAG, "SearchItem: " + searchItem.toString());
         searchView = (SearchView) searchItem.getActionView();
-        Log.d(TAG, "SearchView: " + searchView.toString());
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                Log.i("onQueryTextChange", newText);
-                return true;
+        Geocoder g = new Geocoder(this, Locale.getDefault());
+        LatLng lt = new LatLng(41.651841, -4.728340);
+        final HashMap<String, LatLng> addressNames = new HashMap<>();
+        try {
+            List<Address> listAddress = g.getFromLocation(lt.latitude, lt.longitude, 1000);
+            for (int i=0;i<listAddress.size();i++){
+                Log.d(TAG, "list size: " + listAddress.size());
+                String address = listAddress.get(i).getAddressLine(0);
+                Log.d(TAG, address);
+                LatLng location = new LatLng(listAddress.get(i).getLatitude(),listAddress.get(i).getLongitude());
+                int position = address.indexOf(",");
+                if (position!=-1){
+                    addressNames.put(address.substring(0,position).toUpperCase(), location);
+                }
             }
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                Log.i("onQueryTextSubmit", query);
-                return true;
-            }
-        });*/
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (searchView != null){
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    Log.i("onQueryTextSubmit", query);
+                    if (addressNames.containsKey(query.toUpperCase())){
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(addressNames.get(query.toUpperCase()), 16));
+                    }
+                    return true;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    Log.i("onQueryTextCahnge", newText);
+                    return true;
+                }
+            });
+        }*/
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -376,9 +531,9 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        /*if (id == R.id.action_settings) {
+        if (id == R.id.action_search) {
             return true;
-        }*/
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -391,12 +546,8 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
         if (id == R.id.nav_map) {
             onMapReady(mMap);
         } else if (id == R.id.nav_gallery) {
-            Intent i = new Intent(getApplicationContext(), StreetGalleryActivity.class);
+            Intent i = new Intent(getApplicationContext(), GalleryStreetActivity.class);
             startActivity(i);
-
-        } else if (id == R.id.nav_route) {
-
-        } else if (id == R.id.nav_download) {
 
         }
 
@@ -406,6 +557,10 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+    /**
+     * Start new activity when marker clicked
+     * @param marker marker clicked
+     */
     @Override
     public void onInfoWindowClick(Marker marker) {
         int id = hashMarker.get(marker.getPosition());
@@ -415,18 +570,15 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
 
         while(i.hasNext()){
             MarkerPropio m = (MarkerPropio) i.next();
-            Log.d(TAG, m.getId() + " - " + id);
             if (m.getId()==id){
                 numImages=m.getNumImages();
-                Log.d(TAG, "num " + numImages);
             }
         }
 
         if (numImages==1){
-            Log.d(TAG, "URL: "+ ImageGalleryActivity.URL_FROM_MARKER + id +
-                    ImageGalleryActivity.URL_FORMAT);
-            JsonArrayRequest jsArrayRequest = new JsonArrayRequest(ImageGalleryActivity.URL_FROM_MARKER + id +
-                    ImageGalleryActivity.URL_FORMAT, new Response.Listener<JSONArray>() {
+
+            JsonArrayRequest jsArrayRequest = new JsonArrayRequest(GalleryImageActivity.URL_FROM_MARKER + id +
+                    GalleryImageActivity.URL_FORMAT, new Response.Listener<JSONArray>() {
 
                 @Override
                 public void onResponse(JSONArray response) {
@@ -436,9 +588,8 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
                         try {
                             JSONObject objeto= response.getJSONObject(i);
                             int idImagen = objeto.getInt("id");
-                            Log.e(TAG, "START INTENT - " + idImagen);
-                            Intent intent = new Intent(getApplicationContext(), DetalleActivity.class);
-                            intent.putExtra(DetalleActivity.EXTRA_PARAM_ID, idImagen);
+                            Intent intent = new Intent(getApplicationContext(), DetailActivity.class);
+                            intent.putExtra(DetailActivity.EXTRA_PARAM_ID, idImagen);
                             startActivity(intent);
                         } catch (JSONException e) {
                             Log.e(TAG, "Error de parsing: "+ e.getMessage() + "/// "+ e.getCause());
@@ -454,38 +605,26 @@ public class MapsActivity extends AppCompatActivity implements NavigationView.On
             requestQueue.add(jsArrayRequest);
 
         } else{
-            Intent intent = new Intent(this, ImageGalleryActivity.class);
-            intent.putExtra(ImageGalleryActivity.EXTRA_PARAM_ID, id);
-            intent.putExtra(ImageGalleryActivity.EXTRA_PARAM, 1);
-
+            Intent intent = new Intent(this, GalleryImageActivity.class);
+            intent.putExtra(GalleryImageActivity.EXTRA_PARAM_ID, id);
+            intent.putExtra(GalleryImageActivity.EXTRA_PARAM, 1);
+            intent.putExtra(GalleryImageActivity.EXTRA_PARAM_NAME_MARKER, marker.getTitle());
             startActivity(intent);
-
         }
-
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         Log.d(TAG, "OnStop");
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if(locationManager!=null){
+                if (locationManager.getAllProviders()!=null){
+                    locationManager.removeUpdates(this);
+                }
+            }
         }
-        if (locationManager.getAllProviders()!=null){
-            locationManager.removeUpdates(this);
-        }
-    }
-
-    @Override
-    public void onGpsStatusChanged(int event) {
-
     }
 
 }

@@ -1,13 +1,16 @@
 package com.uva.adrmart.cronovisor_v1.activitys;
 
-/**
- * Created by Adrian on 07/06/2016.
+/** Splash screen
+ * Starts LocationService
  */
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Window;
 
 import com.uva.adrmart.cronovisor_v1.R;
@@ -27,10 +30,17 @@ public class SplashScreenActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         // Set portrait orientation
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        //startService(new Intent(Intent.ACTION_SYNC, null,SplashScreenActivity.this, LocationService.class));
-       startService(new Intent(this, LocationService.class));
+
+        if (!isMyServiceRunning(LocationService.class)){
+            Log.d(TAG, "Servicio no activo");
+            startService(new Intent(this, LocationService.class));
+        } else{
+            Log.d(TAG, "Servicio ya activo");
+        }
+
         // Hide title bar
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 
@@ -50,9 +60,25 @@ public class SplashScreenActivity extends Activity {
                 finish();
             }
         };
+
         // Simulate a long loading process on application startup.
         Timer timer = new Timer();
         timer.schedule(task, SPLASH_SCREEN_DELAY);
+    }
+
+    /**
+     * Check if location service is running
+     * @param serviceClass class to check if is running
+     * @return true is running, false isn´t running
+     */
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 

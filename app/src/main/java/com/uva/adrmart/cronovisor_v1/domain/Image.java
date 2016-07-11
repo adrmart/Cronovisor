@@ -8,7 +8,6 @@ import java.io.Serializable;
 public class Image implements Serializable {
 
     private int id;
-    private int orientacion;
     private String url; //URL
     private String titulo;
     private String descripcion;
@@ -18,12 +17,16 @@ public class Image implements Serializable {
     private String marker;
     private String street;
 
+/*
+    private Bitmap image_bitmap;
+*/
+
     public Image(){
 
     }
 
     public Image(String autor, int año, String street, String descripcion, int id, String url,
-                 String marker, int orientacion, String titulo) {
+                 String marker, String titulo) {
         this.autor = autor;
         this.año = año;
         this.street = street;
@@ -31,10 +34,21 @@ public class Image implements Serializable {
         this.id = id;
         this.url = url;
         this.marker = marker;
-        this.orientacion = orientacion;
         this.titulo = titulo;
     }
 
+   /* public Image(String autor, int año, String street, String descripcion, int id, Bitmap image_bitmap,
+                 String marker, String titulo) {
+        this.autor = autor;
+        this.año = año;
+        this.street = street;
+        this.descripcion = descripcion;
+        this.id = id;
+        this.image_bitmap = image_bitmap;
+        this.marker = marker;
+        this.titulo = titulo;
+    }
+*/
     public String getUrl() {
         return url;
     }
@@ -63,6 +77,19 @@ public class Image implements Serializable {
         return titulo;
     }
 
+    public String getMarker() {
+        return marker;
+    }
 
+    public String getStreet() {
+        return street;
+    }
 
+  /*  public void setImage_bitmap(Bitmap image_bitmap) {
+        this.image_bitmap = image_bitmap;
+    }
+
+    public Bitmap getImage_bitmap() {
+        return image_bitmap;
+    }*/
 }

@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -27,6 +28,7 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
 import com.uva.adrmart.cronovisor_v1.R;
 import com.uva.adrmart.cronovisor_v1.adapter.GridViewStreetAdapter;
+import com.uva.adrmart.cronovisor_v1.adapter.ListViewStreetAdapter;
 import com.uva.adrmart.cronovisor_v1.domain.Street;
 
 import org.json.JSONArray;
@@ -36,21 +38,28 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Locale;
 
+/**
+ * Class that models street gallery
+ */
 public class GalleryStreetActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = GalleryStreetActivity.class.getName();
     private SearchView searchView;
     private SearchView.OnQueryTextListener queryTextListener;
 
-    private GridView mGridView;
     private ProgressBar mProgressBar;
     private GridViewStreetAdapter mGridAdapter;
     private ArrayList<Street> mGridData;
     private RequestQueue requestQueue;
 
     private static final String URL_STREETS= "http://virtual.lab.inf.uva.es:20202/street/?format=json";
-    private MenuItem searchItem;
     private String idioma;
+    private GridView mGridView;
+    private ListView mListView;
+    private ListViewStreetAdapter mListAdapter;
+/*
+    private StreetDao streetDao;
+*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,13 +79,19 @@ public class GalleryStreetActivity extends AppCompatActivity implements Navigati
         assert navigationView != null;
         navigationView.setNavigationItemSelectedListener(this);
 
+/*
+        streetDao = new StreetDaoImpl();
+*/
         mGridView = (GridView) findViewById(R.id.gridView);
+        mListView = (ListView) findViewById(R.id.listView);
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         //Initialize with empty data
         mGridData = new ArrayList<>();
         mGridAdapter = new GridViewStreetAdapter(this, mGridData);
+        mListAdapter = new ListViewStreetAdapter(this, mGridData);
         mGridView.setAdapter(mGridAdapter);
+        mListView.setAdapter(mListAdapter);
 
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
@@ -84,15 +99,34 @@ public class GalleryStreetActivity extends AppCompatActivity implements Navigati
                 //Get item at position
                 Street item = (Street) parent.getItemAtPosition(position);
 
-                //Pass the image title and url to DetailsActivity
-                Intent intent = new Intent(GalleryStreetActivity.this, ImageGalleryActivity.class);
-                intent.putExtra(ImageGalleryActivity.EXTRA_PARAM_ID, item.getId());
-                intent.putExtra(ImageGalleryActivity.EXTRA_PARAM, 2);
+                //Pass the image title and url to GalleryImageActivity
+                Intent intent = new Intent(GalleryStreetActivity.this, GalleryImageActivity.class);
+                intent.putExtra(GalleryImageActivity.EXTRA_PARAM_ID, item.getId());
+                intent.putExtra(GalleryImageActivity.EXTRA_PARAM, 2);
+                intent.putExtra(GalleryImageActivity.EXTRA_PARAM_NAME_STREET, item.getNombre());
 
-                //Start details activity
+                //Start GalleryImage activity
                 startActivity(intent);
             }
         });
+
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+
+                //Get item at position
+                Street item = (Street) parent.getItemAtPosition(position);
+
+                //Pass the street id to GalleryImageActivity
+                Intent intent = new Intent(GalleryStreetActivity.this, GalleryImageActivity.class);
+                intent.putExtra(GalleryImageActivity.EXTRA_PARAM_ID, item.getId());
+                intent.putExtra(GalleryImageActivity.EXTRA_PARAM, 2);
+                intent.putExtra(GalleryImageActivity.EXTRA_PARAM_NAME_STREET, item.getNombre());
+
+                //Start GalleryImage activity
+                startActivity(intent);
+            }
+        });
+
         requestQueue= Volley.newRequestQueue(this);
         mProgressBar.setVisibility(View.VISIBLE);
         requestStreets();
@@ -105,15 +139,13 @@ public class GalleryStreetActivity extends AppCompatActivity implements Navigati
             @Override
             public void onResponse(JSONArray response) {
 
-                // Obtener el marker del objeto
+                // Get marker from object
                 if (idioma.equals("español")){
                     for(int i=0; i<response.length(); i++){
                         try {
                             JSONObject objeto= response.getJSONObject(i);
                             Street street = new Street(objeto.getString("description_es"),
                                     objeto.getInt("id"),
-                                    objeto.getDouble("latitud"),
-                                    objeto.getDouble("longitud"),
                                     objeto.getString("name_es"),
                                     objeto.getString("represent"));
                             mGridData.add(street);
@@ -129,9 +161,7 @@ public class GalleryStreetActivity extends AppCompatActivity implements Navigati
                             JSONObject objeto= response.getJSONObject(i);
                             Street street = new Street(objeto.getString("description_en"),
                                     objeto.getInt("id"),
-                                    objeto.getDouble("latitud"),
-                                    objeto.getDouble("longitud"),
-                                    objeto.getString("name_en"),
+                                    objeto.getString("name_es"),
                                     objeto.getString("represent"));
                             mGridData.add(street);
                         } catch (JSONException e) {
@@ -143,14 +173,22 @@ public class GalleryStreetActivity extends AppCompatActivity implements Navigati
                 }
 
                 mGridAdapter.setGridData(mGridData);
+                mListAdapter.setGridData(mGridData);
                 mProgressBar.setVisibility(View.GONE);
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.d(TAG, "Error Respuesta en JSON: " + error.getMessage() +  " || " + error.getLocalizedMessage());
+              /*  if (streetDao.findStreets()!=null){
+                    mGridData = streetDao.findStreets();
+                    mGridAdapter.setGridData(mGridData);
+                    mListAdapter.setGridData(mGridData);
+                    mProgressBar.setVisibility(View.GONE);
+                } else{
+                    Toast.makeText(getBaseContext(), getText(R.string.server_fail), Toast.LENGTH_LONG).show();
+                }*/
                 Toast.makeText(getBaseContext(), getText(R.string.server_fail), Toast.LENGTH_LONG).show();
-
             }
         });
         requestQueue.add(jsArrayRequest);
@@ -166,12 +204,13 @@ public class GalleryStreetActivity extends AppCompatActivity implements Navigati
             startActivity(i);
 
         } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_route) {
+            onRestart();
+        }/* else if (id == R.id.nav_route) {
+            Toast.makeText(this, "Not implemented yet", Toast.LENGTH_LONG).show();
 
         } else if (id == R.id.nav_download) {
-
-        }
+            Toast.makeText(this, "Not implemented yet", Toast.LENGTH_LONG).show();
+        }*/
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         assert drawer != null;
@@ -181,14 +220,12 @@ public class GalleryStreetActivity extends AppCompatActivity implements Navigati
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu, menu);
-        searchItem = menu.findItem(R.id.action_search);
+        // Inflate the menu_gallery; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_gallery, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_search);
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         Log.d(TAG, "SearchItem: " + searchItem.toString());
-        if (searchItem != null) {
-            searchView = (SearchView) searchItem.getActionView();
-        }
+        searchView = (SearchView) searchItem.getActionView();
 
         if (searchView != null) {
 
@@ -199,6 +236,7 @@ public class GalleryStreetActivity extends AppCompatActivity implements Navigati
                 public boolean onQueryTextChange(String newText) {
                     Log.i("onQueryTextChange", newText);
                     mGridAdapter.getFilter().filter(newText);
+                    mListAdapter.getFilter().filter(newText);
                     return true;
                 }
                 @Override
@@ -218,6 +256,15 @@ public class GalleryStreetActivity extends AppCompatActivity implements Navigati
             case R.id.action_search:
                 // Not implemented here
                 return false;
+            case R.id.action_switch:
+                if (item.getTitle().equals(getString(R.string.switch_grid))){
+                    item.setTitle(R.string.switch_linear);
+                    gridLayout();
+                } else{
+                    item.setTitle(R.string.switch_grid);
+                    linearLayout();
+                }
+                return false;
             default:
                 break;
         }
@@ -225,4 +272,23 @@ public class GalleryStreetActivity extends AppCompatActivity implements Navigati
 
         return super.onOptionsItemSelected(item);
     }
+
+    /**
+     * Change layout to linear layout
+     */
+    private void linearLayout() {
+        Log.d(TAG, "Change to linearLayout");
+        mGridView.setVisibility(View.GONE);
+        mListView.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Change layout to grid layout
+     */
+    private void gridLayout() {
+        Log.d(TAG, "Change to gridLayout");
+        mGridView.setVisibility(View.VISIBLE);
+        mListView.setVisibility(View.GONE);
+    }
+
 }

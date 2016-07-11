@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true"
-        tools:context=".activitys.StreetGalleryActivity">
+        tools:context=".activitys.GalleryStreetActivity">
 
         <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
@@ -32,12 +32,16 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:clickable="false"
+            android:descendantFocusability="blocksDescendants"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
             <GridView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:columnWidth="120dp"
+                android:columnWidth="@dimen/column_dimen"
                 android:horizontalSpacing="@dimen/espacio_grid"
                 android:numColumns="auto_fit"
                 android:padding="@dimen/espacio_grid"
@@ -46,6 +50,15 @@
                 android:focusable="true"
                 android:clickable="true"
                 android:id="@+id/gridView" />
+
+            <ListView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/listView"
+                android:descendantFocusability="blocksDescendants"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:visibility="gone"/>
 
             <ProgressBar
                 android:layout_width="wrap_content"

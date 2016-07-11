@@ -43,15 +43,15 @@
             android:label="@string/title_activity_maps"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".activitys.StreetGalleryActivity"
+            android:name=".activitys.GalleryStreetActivity"
             android:label="@string/title_activity_street_gallery"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".activitys.ImageGalleryActivity"
+            android:name=".activitys.GalleryImageActivity"
             android:label="@string/title_activity_image"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".activitys.DetalleActivity"
+            android:name=".activitys.DetailActivity"
             android:screenOrientation="landscape"
             android:theme="@style/AppTheme.NoActionBar" />
 

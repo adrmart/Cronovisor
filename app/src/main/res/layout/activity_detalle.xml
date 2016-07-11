@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal" android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -10,20 +9,47 @@
         android:layout_height="match_parent"
         android:scaleType="fitCenter"
         android:background="@color/colorBlack"
-        android:layout_weight=".40" />
+        android:layout_weight=".40"
+        android:contentDescription="@string/imagen_ampliable" />
 
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight=".60"
+        android:orientation="vertical"
+        android:id="@+id/text_layout"
         android:padding="5dp">
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/text_image"/>
+            android:id="@+id/title_image"
+            android:textSize="@dimen/title_image_text"
+            android:textStyle="bold"/>
 
-    </ScrollView>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/autor_text"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/year_text"/>
+
+        <ScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/text_image"/>
+        </ScrollView>
+
+
+    </LinearLayout>
 
 </LinearLayout>
 
